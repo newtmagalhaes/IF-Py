@@ -60,9 +60,41 @@ A interface deverá:
 
 ## Fluxos
 
+Serão explicados os procedimentos a serem realizados em cada etapa da aplicação.
+
 ### inicialização
 
+1. - [ ] Criar janela;
+  
+2. - [ ] Posicionar componentes visuais (desativados até resolver a caixa de diálogo);
+     - [ ] a fila e o passeio;
+     - [ ] botão para adicionar passageiro;
+     - [ ] botão para encerrar expediente (desalocar variáveis e encerrar o programa);
+     - [ ] log com as chamadas realizadas;
+  
+3. - [ ] Abrir caixa de diálogo:
+     - [ ] pedir dados do vagão (_devem ser estritamente positivos_):
+       - **v**: quantidade de vagas;
+       - **tv**: tempo de viagem;
+     - [ ] recusar dados inválidos;
+     - [ ] instanciar vagão com dados válidos (_status:dormindo_); 
+
 ### execução
+
+- [ ] funcionalidade do botão para adicionar passageiros:
+  - [ ] Abrir caixa de diálogo (demais threads executando enquanto isso):
+     - [ ] pedir dados do passageiro (_devem ser estritamente positivos_):
+       - **te**: tempo de embarque;
+       - **td**: tempo de desembarque;
+     - [ ] recusar dados inválidos;
+     - [ ] instanciar passageiro com dados válidos e adicionar ao fim da fila (_status:dormindo_);
+
+- [ ] funcionalidade do botão de fim do expediente:
+  - [ ] desembarcar passageiros quando o vagão estiver na plataforma (momento de embarque ou desembarque);
+  - [ ] bloquear embarque;
+  - [ ] desalocar passageiros;
+  - [ ] desalocar vagão;
+  - [ ] fechar janela;
 
 #### Fila de Passageiros
 
