@@ -66,6 +66,7 @@ Serão explicados os procedimentos a serem realizados em cada etapa da aplicaç�
 
 1. - [ ] Criar janela;
   
+> Discutir entre fazer isso logo abaixo ou apenas criar a caixa de diálogo antes da janela principal;
 2. - [ ] Posicionar componentes visuais (desativados até resolver a caixa de diálogo);
      - [ ] a fila e o passeio;
      - [ ] botão para adicionar passageiro;
@@ -81,13 +82,33 @@ Serão explicados os procedimentos a serem realizados em cada etapa da aplicaç�
 
 ### execução
 
-- [ ] funcionalidade do botão para adicionar passageiros:
-  - [ ] Abrir caixa de diálogo (demais threads executando enquanto isso):
+- [ ] funcionalidade do botão para adicionar passageiros (demais threads executando enquanto isso):
+  - [ ] Abrir caixa de diálogo:
      - [ ] pedir dados do passageiro (_devem ser estritamente positivos_):
        - **te**: tempo de embarque;
        - **td**: tempo de desembarque;
      - [ ] recusar dados inválidos;
      - [ ] instanciar passageiro com dados válidos e adicionar ao fim da fila (_status:dormindo_);
+
+Durante a execução, ocorrem 2 fluxos de passageiros:
+- da fila para o vagão;
+- do vagão para a fila.
+
+#### Fila de Passageiros
+
+A fila de passageiros pode ser implementada com uma lista.
+- [ ] cada passageiro terá um método para entrar e sair da fila;
+- [ ] será preciso um _mutex_ para operações que alterem a lista;
+  > é possível que seja preciso definir um tipo (`Fila`) compreendendo essa lista e o _mutex_.
+
+#### Vagão
+
+O vagão tbm deverá possuir uma estrutura semelhante à fila.
+- [ ] cada passageiro terá um método para entrar e sair do vagão;
+- [ ] será preciso um _mutex_ para operações que alterem a ocupação do vagão;
+  > O _mutex_ e a lista de passageiros dentro do vagão podem ser implementados dentro da classe `Vagão`.
+
+### Encerramento
 
 - [ ] funcionalidade do botão de fim do expediente:
   - [ ] desembarcar passageiros quando o vagão estiver na plataforma (momento de embarque ou desembarque);
@@ -95,11 +116,3 @@ Serão explicados os procedimentos a serem realizados em cada etapa da aplicaç�
   - [ ] desalocar passageiros;
   - [ ] desalocar vagão;
   - [ ] fechar janela;
-
-#### Fila de Passageiros
-
-#### Embarque 
-
-#### Desembarque
-
-### Encerramento
