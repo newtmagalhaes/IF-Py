@@ -4,12 +4,12 @@
 
 <!-- ![gif](./assets/gif_de_funcionamento) -->
 
-|          Sumário          |
-| :-----------------------: |
-| [Descrição](##Descrição)  |
-| [Interface](##Interface)  |
-|    [Fluxos](##Fluxos)     |
-| [Threads](##Pseudocodigo) |
+|         Sumário          |
+| :----------------------: |
+| [Descrição](#Descrição)  |
+| [Interface](#Interface)  |
+|    [Fluxos](#Fluxos)     |
+| [Threads](#Pseudocódigo) |
 
 ## Descrição
 
@@ -125,7 +125,7 @@ O vagão tbm deverá possuir uma estrutura semelhante à fila.
 Momento para criar a janela e constantes:
 ```Python
 criar_janela()
-Vagão v = criar_vagão()
+vagao = criar_vagao()
 
 # Permite a transição de passageiros entre fila e vagão
 embarcar = Semaphore(1)
@@ -141,7 +141,7 @@ passear = Semaphore(0)
 vago = Semaphore(0)
 
 # Mutex para ações de leitura e escrita na fila e no vagão
-mutex = Lock(1)
+mutex = Lock()
 
 # Indica que a aplicação ainda está executando
 executando = True
@@ -153,7 +153,7 @@ executando = True
 while executando:
   DOWN(passear)
   começar_passeio() # Set status como 'percorrendo'
-  for i in vagão.n_vagas:
+  for i in vagao.n_vagas:
     # Libera passageiros para apreciar a paisagem
     UP(aguardar)
   realizar_passeio() # Set status como 'dormindo'
@@ -167,23 +167,23 @@ while executando:
 ```Python
 entrar_na_fila()
 while True:
-  if self in fila.início():
+  if self in fila.inicio():
     DOWN(embarcar)
     DOWN(mutex)
-    embarcar_no_vagão() # Altera a fila e o vagão
-    if vagão.esta_cheio():
+    embarcar_no_vagao() # Altera a fila e o vagão
+    if vagao.esta_cheio():
       UP(passear)
     else:
       UP(embarcar)
     UP(mutex)
     DOWN(aguardar)
-    while vagão.status == 'percorrendo':
+    while vagao.status == 'percorrendo':
       apreciar_paisagem()
     DOWN(desembarcar)
     DOWN(mutex)
-    desembarcar_do_vagão()
+    desembarcar_do_vagao()
     entrar_na_fila()
-    if vagão.esta_vago():
+    if vagao.esta_vago():
       UP(vago)
     UP(mutex)
   else:
