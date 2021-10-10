@@ -1,10 +1,10 @@
 # Tipos do problema
-
+from time import sleep
 from queue import Queue
 from threading import Lock, Semaphore, Thread
 
 MUTEX = Lock()
-_STATUS_VAGAO = ['dormindo', 'percorrendo']
+AGUARDAR_EMBARQUE = Semaphore(0)
 _STATUS_PASSAGEIROS = ['dormindo', 'apreciando',
                        'embarcando', 'desembarcando']
 
@@ -19,31 +19,55 @@ class Vagao(Thread):
   completar um passeio;
   """
 
-  def __init__(self, vagas:int, t_viagem:int) -> None:
+  def __init__(self, vagas:int, t_viagem:int, status:int = 0) -> None:
     # Instanciando Thread
     Thread.__init__(self)
 
     # atributos do vagão
-    self.vagas = vagas
-    self.tempo_viagem = t_viagem
+    self._STATUS_VAGAO = ['dormindo', 'percorrendo']
+    self._executando = True
+    self._vagas = vagas
+    self._tempo_viagem = t_viagem
+
+    self.status = self._STATUS_VAGAO[status]
     self.assentos:list[Passageiro] = []
     
     # Semáforos
+    self.vagao_livre = Semaphore(0)
     self.pode_embarcar = Semaphore(0)
     self.pode_desembarcar = Semaphore(0)
     self.pode_passear = Semaphore(0)
 
   def esta_cheio(self) -> bool:
-    pass
+    with MUTEX:
+      return True if len(self.assentos) == self._vagas else False
   
   def iniciar_passeio(self) -> None:
-    pass
+    with MUTEX:
+      print('iniciando passeio')
+      self.status = self._STATUS_VAGAO[1]
 
   def realizar_passeio(self) -> None:
-    pass
+    print('passeando')
+    sleep(self._tempo_viagem)
+    print('fim do passeio')
+    with MUTEX:
+      self.status = self._STATUS_VAGAO[0]
 
   def run(self):
-    pass
+    while True:
+      self.pode_passear.acquire()
+
+      self.iniciar_passeio()
+      for i in range(self._vagas):
+        AGUARDAR_EMBARQUE.release()
+      
+      self.realizar_passeio()
+      for i in range(self._vagas):
+        self.pode_desembarcar.release()
+      
+      self.vagao_livre.acquire()
+      self.pode_embarcar.release()
 
 
 class Passageiro(Thread):
