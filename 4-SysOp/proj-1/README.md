@@ -157,7 +157,8 @@ while executando:
     # Libera passageiros para apreciar a paisagem
     UP(aguardar)
   realizar_passeio() # Set status como 'dormindo'
-  UP(desembarcar)
+  for i in vagao.n_vagas:
+    UP(desembarcar)
   DOWN(vago) 
   UP(embarcar)
 ```
