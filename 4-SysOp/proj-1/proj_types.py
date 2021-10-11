@@ -141,6 +141,8 @@ class Passageiro(Thread):
       if self._vagao.status == 'dormindo' \
          and self == self._fila[0]:
         self._vagao.pode_embarcar.acquire()
+        if not self._vagao._executando:
+          break
         with MUTEX:
           self.sair_da_fila()
           self.embarcar()
