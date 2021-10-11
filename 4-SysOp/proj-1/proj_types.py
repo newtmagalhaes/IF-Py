@@ -31,13 +31,19 @@ class Vagao(Thread):
     
     # Semáforos
     self.vagao_livre = Semaphore(0)
-    self.pode_embarcar = Semaphore(0)
+    self.pode_embarcar = Semaphore(1)
     self.pode_desembarcar = Semaphore(0)
     self.pode_passear = Semaphore(0)
 
+  def desligar(self) -> None:
+    print('Fim do expediente')
+    self._executando = False
+
+  def esta_vago(self):
+    return True if len(self.assentos) == 0 else False
+
   def esta_cheio(self) -> bool:
-    with MUTEX:
-      return True if len(self.assentos) == self._vagas else False
+    return True if len(self.assentos) == self._vagas else False
   
   def iniciar_passeio(self) -> None:
     with MUTEX:
@@ -45,26 +51,28 @@ class Vagao(Thread):
       self.status = self._STATUS_VAGAO[1]
 
   def realizar_passeio(self) -> None:
-    print('passeando')
+    print('passeando\n')
     sleep(self._tempo_viagem)
     print('fim do passeio')
     with MUTEX:
       self.status = self._STATUS_VAGAO[0]
 
   def run(self):
-    while True:
+    while self._executando:
       self.pode_passear.acquire()
 
       self.iniciar_passeio()
-      for i in range(self._vagas):
+      for _ in range(self._vagas):
         AGUARDAR_EMBARQUE.release()
       
       self.realizar_passeio()
-      for i in range(self._vagas):
+      for _ in range(self._vagas):
         self.pode_desembarcar.release()
       
       self.vagao_livre.acquire()
       self.pode_embarcar.release()
+    
+    print('Vagão voltando para garagem')
 
 
 class Passageiro(Thread):
@@ -92,12 +100,18 @@ class Passageiro(Thread):
     self._STATUS_PASSAGEIROS = ['dormindo', 'apreciando',
                                 'embarcando', 'desembarcando']
     self._vagao = vagao
-    self._fila = fila
+    self._fila:list[Passageiro] = fila
 
     self.status = self._STATUS_PASSAGEIROS[status]
     self.id = id
     self.t_embarque = t_embarque
     self.t_desembarque = t_desembarque
+
+  def sair_da_fila(self) -> None:
+    print(f'Passageiro {self.id} saindo da fila')
+    for i, passageiro in enumerate(self._fila):
+      if passageiro is self:
+        self._fila.pop(i)
 
   def entrar_na_fila(self) -> None:
     print(f'Passageiro {self.id} entrou na fila')
@@ -120,11 +134,15 @@ class Passageiro(Thread):
     sleep(2)
   
   def run(self):
-    self.entrar_na_fila()
-    while True:
-      if self is self._fila[0]:
+    with MUTEX:
+      self.entrar_na_fila()
+    
+    while self._vagao._executando:
+      if self._vagao.status == 'dormindo' \
+         and self == self._fila[0]:
         self._vagao.pode_embarcar.acquire()
         with MUTEX:
+          self.sair_da_fila()
           self.embarcar()
           if self._vagao.esta_cheio():
             self._vagao.pode_passear.release()
@@ -142,7 +160,34 @@ class Passageiro(Thread):
             self._vagao.vagao_livre.release()
       else:
         sleep(2)
+    
+    with MUTEX:
+      self.sair_da_fila()
+      print(f'Passageiro {self.id} indo embora')
 
 # Bloco para testes
 if __name__ == '__main__':
-  pass
+  from typing import List
+
+  # Constantes
+  N_PASSAGEIROS = 4
+  N_VAGAS = 2
+  T_VIAGEM = 3
+
+  # Alocando Objetos
+  print('Iniciando aplicação')
+  v = Vagao(N_VAGAS, T_VIAGEM)
+  v.start()
+
+  f : List[Passageiro] = []
+  for i in range(N_PASSAGEIROS):
+    p = Passageiro(f'{i}', 2, 2, v, f)
+    p.start()
+  
+  sleep(10)
+  v.desligar()
+  v.join()
+  for passageiro in f:
+    p.join()
+  
+  print('tudo ok!')
