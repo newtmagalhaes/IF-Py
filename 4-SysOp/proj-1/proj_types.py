@@ -1,12 +1,9 @@
 # Tipos do problema
 from time import sleep
-from queue import Queue
 from threading import Lock, Semaphore, Thread
 
 MUTEX = Lock()
 AGUARDAR_EMBARQUE = Semaphore(0)
-_STATUS_PASSAGEIROS = ['dormindo', 'apreciando',
-                       'embarcando', 'desembarcando']
 
 class Vagao(Thread):
   """
@@ -81,30 +78,70 @@ class Passageiro(Thread):
   * t_desembarque:int;
   """
   
-  def __init__(self, id:str, status:str, t_embarque:int, t_desembarque:int) -> None:
+  def __init__(self,
+               id:str,
+               t_embarque:int,
+               t_desembarque:int,
+               vagao:Vagao,
+               fila:list,
+               status : int = 0) -> None:
     # Instanciando thread
     Thread.__init__(self)
 
     # Atributos do passageiro
+    self._STATUS_PASSAGEIROS = ['dormindo', 'apreciando',
+                                'embarcando', 'desembarcando']
+    self._vagao = vagao
+    self._fila = fila
+
+    self.status = self._STATUS_PASSAGEIROS[status]
     self.id = id
-    self.status = status
     self.t_embarque = t_embarque
     self.t_desembarque = t_desembarque
 
-  def entrar_na_fila(self, fila:Queue) -> None:
-    pass
+  def entrar_na_fila(self) -> None:
+    print(f'Passageiro {self.id} entrou na fila')
+    self._fila.append(self)
 
-  def embarcar(self, carrinho:Vagao) -> None:
-    pass
+  def embarcar(self) -> None:
+    print(f'Passageiro {self.id} embarcando')
+    self._vagao.assentos.append(self)
+    sleep(self.t_embarque)
 
   def desembarcar(self) -> None:
-    pass
+    print(f'Passageiro {self.id} desembarcando')
+    for i, passageiro in enumerate(self._vagao.assentos):
+      if passageiro is self:
+        self._vagao.assentos.pop(i)
+    sleep(self.t_desembarque)
 
   def apreciar_paisagem(self) -> None:
-    pass
+    print(f'Passageiro {self.id} apreciando paisagem')
+    sleep(2)
   
   def run(self):
-    pass
+    self.entrar_na_fila()
+    while True:
+      if self is self._fila[0]:
+        self._vagao.pode_embarcar.acquire()
+        with MUTEX:
+          self.embarcar()
+          if self._vagao.esta_cheio():
+            self._vagao.pode_passear.release()
+          else:
+            self._vagao.pode_embarcar.release()
+        
+        AGUARDAR_EMBARQUE.acquire()
+        while self._vagao.status == 'percorrendo':
+          self.apreciar_paisagem()
+        self._vagao.pode_desembarcar.acquire()
+        with MUTEX:
+          self.desembarcar()
+          self.entrar_na_fila()
+          if self._vagao.esta_vago():
+            self._vagao.vagao_livre.release()
+      else:
+        sleep(2)
 
 # Bloco para testes
 if __name__ == '__main__':
