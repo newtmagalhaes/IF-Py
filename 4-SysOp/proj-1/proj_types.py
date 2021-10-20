@@ -6,17 +6,16 @@ MUTEX = Lock()
 AGUARDAR_EMBARQUE = Semaphore(0)
 
 class Vagao(Thread):
-  """
-  Uma thread que representa um vagão de montanha russa.
+  def __init__(self, vagas:int, t_viagem:int) -> None:
+    """
+    Uma thread que representa um vagão de montanha russa.
 
-  Parâmetros
-  ---
-  * vagas: deve ser >= 0. Quantidade de passageiros que o vagão suporta;
-  * t_viagem: deve ser >= 0. Tempo (em segundos) que o vagão leva para
-  completar um passeio;
-  """
-
-  def __init__(self, vagas:int, t_viagem:int, status:int = 0) -> None:
+    Parâmetros
+    ---
+    - vagas: deve ser >= 0. Quantidade de passageiros que o vagão suporta;
+    - t_viagem: deve ser >= 0. Tempo (em segundos) que o vagão leva para
+    completar um passeio;
+    """
     # Instanciando Thread
     Thread.__init__(self)
 
@@ -26,7 +25,7 @@ class Vagao(Thread):
     self._vagas = vagas
     self._tempo_viagem = t_viagem
 
-    self.status = self._STATUS_VAGAO[status]
+    self.status = self._STATUS_VAGAO[0]
     self.assentos:list[Passageiro] = []
     
     # Semáforos
@@ -84,6 +83,9 @@ class Passageiro(Thread):
   * id:str;
   * t_embarque:int;
   * t_desembarque:int;
+  * vagao: Vagao
+  * fila: list[Passageiro]
+  * status
   """
   
   def __init__(self,
@@ -91,8 +93,7 @@ class Passageiro(Thread):
                t_embarque:int,
                t_desembarque:int,
                vagao:Vagao,
-               fila:list,
-               status : int = 0) -> None:
+               fila:list) -> None:
     # Instanciando thread
     Thread.__init__(self)
 
@@ -102,7 +103,7 @@ class Passageiro(Thread):
     self._vagao = vagao
     self._fila:list[Passageiro] = fila
 
-    self.status = self._STATUS_PASSAGEIROS[status]
+    self.status = self._STATUS_PASSAGEIROS[0]
     self.id = id
     self.t_embarque = t_embarque
     self.t_desembarque = t_desembarque
@@ -115,15 +116,18 @@ class Passageiro(Thread):
 
   def entrar_na_fila(self) -> None:
     print(f'Passageiro {self.id} entrou na fila')
+    self.status = self._STATUS_PASSAGEIROS[0]
     self._fila.append(self)
 
   def embarcar(self) -> None:
     print(f'Passageiro {self.id} embarcando')
+    self.status = self._STATUS_PASSAGEIROS[2]
     self._vagao.assentos.append(self)
     sleep(self.t_embarque)
 
   def desembarcar(self) -> None:
     print(f'Passageiro {self.id} desembarcando')
+    self.status = self._STATUS_PASSAGEIROS[3]
     for i, passageiro in enumerate(self._vagao.assentos):
       if passageiro is self:
         self._vagao.assentos.pop(i)
@@ -131,6 +135,7 @@ class Passageiro(Thread):
 
   def apreciar_paisagem(self) -> None:
     print(f'Passageiro {self.id} apreciando paisagem')
+    self.status = self._STATUS_PASSAGEIROS[1]
     sleep(2)
   
   def run(self):
@@ -138,11 +143,12 @@ class Passageiro(Thread):
       self.entrar_na_fila()
     
     while self._vagao._executando:
-      if self._vagao.status == 'dormindo' \
-         and self == self._fila[0]:
+      if self == self._fila[0]:
         self._vagao.pode_embarcar.acquire()
+        # Se o vagão não estiver mais executando após o release
         if not self._vagao._executando:
           break
+
         with MUTEX:
           self.sair_da_fila()
           self.embarcar()
