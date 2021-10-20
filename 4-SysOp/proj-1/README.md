@@ -118,77 +118,97 @@ O vagão tbm deverá possuir uma estrutura semelhante à fila.
   - [ ] desalocar vagão;
   - [ ] fechar janela;
 
-## Pseudocódigo
+## código
+
+[aqui](./proj_types.py)
 
 ### Inicialização
 
 Momento para criar a janela e constantes:
 ```Python
-criar_janela()
-vagao = criar_vagao()
-
-# Permite a transição de passageiros entre fila e vagão
-embarcar = Semaphore(1)
-desembarcar = Semaphore(0)
+# Mutex para ações de leitura e escrita na fila e no vagão
+MUTEX = Lock()
 
 # Passageiros no vagão aguardando o passeio começar
-aguardar = Semaphore(0)
+AGUARDAR_EMBARQUE = Semaphore(0)
+
+criar_janela()
+
+# A janela fornece os valores de N_VAGAS e T_VIAGEM
+vagao = Vagao(N_VAGAS, T_VIAGEM)
+
+# Semáforos do Vagão:
+
+# Permite a transição de passageiros entre fila e vagão
+vagao.pode_embarcar = Semaphore(1)
+vagao.pode_desembarcar = Semaphore(0)
 
 # Permite o vagão começar o passeio
-passear = Semaphore(0)
+vagao.pode_passear = Semaphore(0)
 
 # Indicando se o vagão está vazio após desembarque
-vago = Semaphore(0)
-
-# Mutex para ações de leitura e escrita na fila e no vagão
-mutex = Lock()
+vagao.esta_vago = Semaphore(0)
 
 # Indica que a aplicação ainda está executando
-executando = True
+vagao._executando = True
 ```
 
 ### Vagão
 
 ```Python
-while executando:
-  DOWN(passear)
-  começar_passeio() # Set status como 'percorrendo'
-  for i in vagao.n_vagas:
-    # Libera passageiros para apreciar a paisagem
-    UP(aguardar)
-  realizar_passeio() # Set status como 'dormindo'
-  for i in vagao.n_vagas:
-    UP(desembarcar)
-  DOWN(vago) 
-  UP(embarcar)
+def run(self):
+    while self._executando:
+      self.pode_passear.acquire()
+
+      self.iniciar_passeio()
+      for _ in range(self._vagas):
+        AGUARDAR_EMBARQUE.release()
+      
+      self.realizar_passeio()
+      for _ in range(self._vagas):
+        self.pode_desembarcar.release()
+      
+      self.vagao_livre.acquire()
+      self.pode_embarcar.release()
+    
+    print('Vagão voltando para garagem')
 ```
 
 ### Passageiros
 
 ```Python
-entrar_na_fila()
-while True:
-  if self in fila.inicio():
-    DOWN(embarcar)
-    DOWN(mutex)
-    embarcar_no_vagao() # Altera a fila e o vagão
-    if vagao.esta_cheio():
-      UP(passear)
-    else:
-      UP(embarcar)
-    UP(mutex)
-    DOWN(aguardar)
-    while vagao.status == 'percorrendo':
-      apreciar_paisagem()
-    DOWN(desembarcar)
-    DOWN(mutex)
-    desembarcar_do_vagao()
-    entrar_na_fila()
-    if vagao.esta_vago():
-      UP(vago)
-    UP(mutex)
-  else:
-    # aguarda um momento para conferir de novo
-    # se está no início da fila ou não
-    sleep(1)
+def run(self):
+    with MUTEX:
+      self.entrar_na_fila()
+    
+    while self._vagao._executando:
+      if self == self._fila[0]:
+        self._vagao.pode_embarcar.acquire()
+        # Se o vagão não estiver mais executando após o release
+        if not self._vagao._executando:
+          break
+
+        with MUTEX:
+          self.sair_da_fila()
+          self.embarcar()
+          if self._vagao.esta_cheio():
+            self._vagao.pode_passear.release()
+          else:
+            self._vagao.pode_embarcar.release()
+        
+        AGUARDAR_EMBARQUE.acquire()
+        while self._vagao.status == 'percorrendo':
+          self.apreciar_paisagem()
+        self._vagao.pode_desembarcar.acquire()
+        with MUTEX:
+          self.desembarcar()
+          self.entrar_na_fila()
+          if self._vagao.esta_vago():
+            self._vagao.vagao_livre.release()
+      else:
+        sleep(2)
+    
+    with MUTEX:
+      self.sair_da_fila()
+      print(f'Passageiro {self.id} indo embora')
 ```
