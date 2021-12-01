@@ -4,8 +4,9 @@ from dataclasses import dataclass
 @dataclass
 class Pagina:
   id:str
-  bit_R:bool = 0
-  bit_M:bool = 0
+  bit_R:int = 0
+  bit_M:int = 0
+  classe:int = 0
 
 class Fila:
   def __init__(self, limite:int) -> None:
@@ -82,7 +83,7 @@ def fifo(limite:int, ref_list:'list[str]', delta_t:int=0) -> int:
     else:
       if f.esta_cheia():
         f.desenfilar()
-      f.enfilar(Pagina(id, 1, 0))
+      f.enfilar(Pagina(id))
   return acerto
 
 
@@ -90,7 +91,17 @@ def mru(limite:int, ref_list:'list[str]', delta_t:int=0) -> int:
   ''''''
   f = Fila(limite)
   acerto = 0
-
+  for ref in ref_list:
+    id = ref[:-1]
+    pos = f.encontrar(id)
+    if pos >= 0:
+      acerto += 1
+      aux = f.desenfilar(pos)
+      f.enfilar(aux)
+    else:
+      if f.esta_cheia():
+        f.desenfilar()
+      f.enfilar(Pagina(id))
   return acerto
 
 
@@ -113,37 +124,71 @@ def sc(limite:int, ref_list:'list[str]', delta_t:int=50) -> int:
     if i % delta_t == 0:
       # Se i for multiplo de delta_t
       for pag in f.pag_list:
-        pag.bit_R = False
+        pag.bit_R = 0
     pos = f.encontrar(id)
     if pos >= 0:
-      f.pag_list[pos].bit_R = True
+      f.pag_list[pos].bit_R = 1
       acerto += 1
     else:
       if f.esta_cheia():
         while f.pag_list[0].bit_R:
           aux = f.desenfilar()
-          aux.bit_R = False
+          aux.bit_R = 0
           f.enfilar(aux)
         f.desenfilar()
-      f.enfilar(Pagina(id, 1, 0))
+      f.enfilar(Pagina(id, 1))
   return acerto
 
 
-def nur(limite:int, ref_list:'list[str]', delta_t:int=0) -> int:
+def nur(limite: int, ref_list: 'list[str]', delta_t: int = 0) -> int:
   ''''''
   f = Fila(limite)
   acerto = 0
+  for i, ref in enumerate(ref_list):
+    id = ref[:-1]
+    ultimo_caracter = ref[-1]
+    if i % delta_t == 0:
+      # Se i for multiplo de delta_t
+      for pag in f.pag_list:
+        pag.bit_R = 0
+        if pag.bit_M == 0:
+          pag.classe = 0
+        else:
+          pag.classe = 1
+
+    pos = f.encontrar(id)
+    if pos >= 0:
+      f.pag_list[pos].bit_R = 1
+      acerto += 1
+      if ultimo_caracter == 'W':
+        f.pag_list[pos].bit_M = 1
+        f.pag_list[pos].classe = 3
+    else:
+      if f.esta_cheia():
+        # como classe varia de 0 a 3, qualquer valor
+        # entrará na condição pelo menos uma vez
+        menor_classe = 4
+        pos_menor_classe = 0
+        for pos, pag in enumerate(f.pag_list):
+          if pag.classe < menor_classe:
+            menor_classe = pag.classe
+            pos_menor_classe = pos
+        f.desenfilar(pos_menor_classe)
+      if ultimo_caracter == 'W':
+        f.enfilar(Pagina(id, 1, 1, 3)) 
+      else:
+        f.enfilar(Pagina(id, 1, 0, 2))
 
   return acerto
 
 #%% Implementando interface
 # imports usados no arquivo
-from tkinter import (Canvas, PhotoImage, Tk, StringVar, ttk, filedialog)
+from tkinter import (Tk, StringVar, ttk, filedialog)
 from pandas import DataFrame
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import pyplot as plt
 from seaborn import pointplot, set_style
-set_style(style='darkgrid', rc={'figure.figsize':(12, 6)})
+set_style(style='darkgrid')
 
 class App(Tk):
   def __init__(self):
@@ -173,7 +218,7 @@ class App(Tk):
       .grid(row=4, column=1)
 
     # Set delta T
-    self.app_delta_t = StringVar(value=50)
+    self.app_delta_t = StringVar(value=30)
     ttk.Label(self, text='Defina delta T:')\
       .grid(row=5, column=0, padx=5, pady=5)
     ttk.Entry(self, textvariable=self.app_delta_t, width=3)\
@@ -182,10 +227,12 @@ class App(Tk):
     # Executar algoritmos
     ttk.Button(self, text='Executar algoritmos', command=self.app_executar)\
       .grid(row=6, column=0, columnspan=2, padx=5, pady=5)
+
     self.app_fig, self.app_ax = plt.subplots(figsize=(6, 4))
     self.app_canvas = FigureCanvasTkAgg(figure=self.app_fig, master=self)
     self.app_canvas.get_tk_widget().grid(row=0, rowspan=6, column=2)
     self.app_tabela = StringVar()
+
     ttk.Label(self, textvariable=self.app_tabela)\
       .grid(row=0, rowspan=6, column=3, padx=5, pady=5)
   
@@ -196,7 +243,7 @@ class App(Tk):
   def app_executar(self):
     # Se a string tem a extensão txt
     if '.txt' in self.app_txt_path.get().lower():
-      frame_range = range(int(self.app_frame_min.get()), int(self.app_frame_max.get()) + 1)
+      frame_range = range(int(self.app_frame_min.get()), int(self.app_frame_max.get()) + 1, 20)
       ALGORITMOS = [fifo, sc, mru, nur]
       resultados = {func.__name__.upper():[] for func in ALGORITMOS}
       resultados['FRAMES'] = frame_range
