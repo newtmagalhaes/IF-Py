@@ -63,17 +63,7 @@ class Fila:
 
 #%% Implementando Algoritmos de substituição de páginas
 def fifo(limite:int, ref_list:'list[str]', delta_t:int=0) -> int:
-  '''
-  # FIFO (First-In First-Out)
-  Mantém uma lista encadeada de todas as páginas:
-  - A página mais antiga está cabeça da fila;
-  - A página que chegou por último na memória é colocada no final da fila;
-  - Na ocorrência de falta de página:
-    - A página na cabeça da fila é removida;
-    - A nova página é adicionada no final da fila;
-  - Desvantagem
-    - Páginas muito usadas podem ser removidas.
-'''
+  '''FIFO (First-In First-Out)'''
   f = Fila(limite)
   acerto = 0
   for ref in ref_list:
@@ -88,7 +78,7 @@ def fifo(limite:int, ref_list:'list[str]', delta_t:int=0) -> int:
 
 
 def mru(limite:int, ref_list:'list[str]', delta_t:int=0) -> int:
-  ''''''
+  '''Menos recentemente Usada'''
   f = Fila(limite)
   acerto = 0
   for ref in ref_list:
@@ -105,18 +95,8 @@ def mru(limite:int, ref_list:'list[str]', delta_t:int=0) -> int:
   return acerto
 
 
-def sc(limite:int, ref_list:'list[str]', delta_t:int=50) -> int:
-  '''
-  # Segunda Chance
-  Modificação do FIFO para evitar que páginas muito usadas sejam removidas da memória.
-  - Faz-se uso do `bit_R` (indica se a página foi referenciada):
-  - Quando uma página é referenciada, seu `bit_R` é setado (= True);
-  - A cada `delta_t` iterações, o algoritmo zera o `bit_R` de todas as páginas na fila;
-  - Na ocorrência de falta de página:
-    - Examina o `bit_R` da página mais antiga (cabeça da fila):
-      - `bit_R` = False => A página não está sendo usada e será substituída;
-      - `bit_R` = True  => O algoritmo zera o `bit_R` e coloca a página no final da fila;
-'''
+def sc(limite:int, ref_list:'list[str]', delta_t:int=30) -> int:
+  '''Segunda Chance'''
   f = Fila(limite)
   acerto = 0
   for i, ref in enumerate(ref_list):
@@ -140,8 +120,8 @@ def sc(limite:int, ref_list:'list[str]', delta_t:int=50) -> int:
   return acerto
 
 
-def nur(limite: int, ref_list: 'list[str]', delta_t: int = 0) -> int:
-  ''''''
+def nur(limite:int, ref_list:'list[str]', delta_t:int=30) -> int:
+  '''Não Usada Recentemente'''
   f = Fila(limite)
   acerto = 0
   for i, ref in enumerate(ref_list):
@@ -163,6 +143,8 @@ def nur(limite: int, ref_list: 'list[str]', delta_t: int = 0) -> int:
       if ultimo_caracter == 'W':
         f.pag_list[pos].bit_M = 1
         f.pag_list[pos].classe = 3
+      else:
+        f.pag_list[pos].classe = 2
     else:
       if f.esta_cheia():
         # como classe varia de 0 a 3, qualquer valor
@@ -183,7 +165,8 @@ def nur(limite: int, ref_list: 'list[str]', delta_t: int = 0) -> int:
 
 #%% Implementando interface
 # imports usados no arquivo
-from tkinter import (Tk, StringVar, ttk, filedialog)
+from tkinter import Tk, StringVar, ttk, filedialog
+from tkinter.messagebox import showwarning
 from pandas import DataFrame
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib import pyplot as plt
@@ -205,36 +188,40 @@ class App(Tk):
       .grid(row=1, column=0, columnspan=2, padx=5, pady=5)
     
     # Set entrada de número de Frames
-    self.app_frame_min = StringVar(value='0')
-    self.app_frame_max = StringVar(value='1')
+    self.app_frame_min = StringVar(value='50')
+    self.app_frame_max = StringVar(value='90')
+    self.app_frame_step = StringVar(value='20')
     ttk.Label(self, text='Defina os intervalos de Frames')\
       .grid(row=2, column=0, columnspan=2, padx=5, pady=5)
 
     ttk.Label(self, text='De:').grid(row=3, column=0)
     ttk.Entry(self, textvariable=self.app_frame_min, width=3)\
       .grid(row=3, column=1)
-    ttk.Label(self, text='até:').grid(row=4, column=0)
+    ttk.Label(self, text='Até:').grid(row=4, column=0)
     ttk.Entry(self, textvariable=self.app_frame_max, width=3)\
       .grid(row=4, column=1)
+    ttk.Label(self, text='Passo:').grid(row=5, column=0)
+    ttk.Entry(self, textvariable=self.app_frame_step, width=3)\
+      .grid(row=5, column=1)
 
     # Set delta T
     self.app_delta_t = StringVar(value=30)
     ttk.Label(self, text='Defina delta T:')\
-      .grid(row=5, column=0, padx=5, pady=5)
+      .grid(row=6, column=0, padx=5, pady=5)
     ttk.Entry(self, textvariable=self.app_delta_t, width=3)\
-      .grid(row=5, column=1, padx=5, pady=5)
+      .grid(row=6, column=1, padx=5, pady=5)
 
     # Executar algoritmos
     ttk.Button(self, text='Executar algoritmos', command=self.app_executar)\
-      .grid(row=6, column=0, columnspan=2, padx=5, pady=5)
+      .grid(row=7, column=0, columnspan=2, padx=5, pady=5)
 
     self.app_fig, self.app_ax = plt.subplots(figsize=(6, 4))
     self.app_canvas = FigureCanvasTkAgg(figure=self.app_fig, master=self)
-    self.app_canvas.get_tk_widget().grid(row=0, rowspan=6, column=2)
-    self.app_tabela = StringVar()
+    self.app_canvas.get_tk_widget().grid(row=0, rowspan=7, column=2)
 
+    self.app_tabela = StringVar()
     ttk.Label(self, textvariable=self.app_tabela)\
-      .grid(row=0, rowspan=6, column=3, padx=5, pady=5)
+      .grid(row=0, rowspan=7, column=3, padx=5, pady=5)
   
   def app_escolher_arquivo(self):
     txt_path = filedialog.askopenfilename(defaultextension='txt')
@@ -243,7 +230,9 @@ class App(Tk):
   def app_executar(self):
     # Se a string tem a extensão txt
     if '.txt' in self.app_txt_path.get().lower():
-      frame_range = range(int(self.app_frame_min.get()), int(self.app_frame_max.get()) + 1, 20)
+      frame_range = range(int(self.app_frame_min.get()),      # Start
+                          int(self.app_frame_max.get()) + 1,  # Stop (+1 para incluir o final)
+                          int(self.app_frame_step.get()))     # Step (passo)
       ALGORITMOS = [fifo, sc, mru, nur]
       resultados = {func.__name__.upper():[] for func in ALGORITMOS}
       resultados['FRAMES'] = frame_range
@@ -271,30 +260,31 @@ class App(Tk):
                       xlabel='Quantidade de Frames',
                       ylabel='Quantidade de Acertos')
       self.app_canvas.draw()
-      # ax.get_figure().savefig('output.png')
-    # Para teste apenas
+      # df.to_csv('./output.csv')             # Salvando tabela em arquivo csv
+      # ax.get_figure().savefig('output.png') # Salvando gráfico em um arquivo
     else:
-      data = {'FRAMES':[50, 70, 90],
-              'FIFO':[480, 662, 833],
-              'SC':  [488, 666, 837],
-              'MRU': [478, 657, 824],
-              'NUR': [484, 671, 839]}
-      df = DataFrame(data)
-      self.app_tabela.set(df)
-      long_df = df.melt('FRAMES', var_name='algoritmos', value_name='acertos')
-      # print(long_df)
-
-      self.app_ax.clear()
-      pointplot(data=long_df,
-                x='FRAMES',
-                y='acertos',
-                hue='algoritmos',
-                ax=self.app_ax
-                ).set(title='Algoritmos de substituição de páginas',
-                      xlabel='Quantidade de Frames',
-                      ylabel='Quantidade de Acertos')
-      # ax.get_figure().savefig('output.png')
-      self.app_canvas.draw()
+      showwarning(title='Cuidado!!!', message='Selecione um caminho válido primeiro')
+    # # Para teste apenas
+    # else:
+    #   data = {'FRAMES':[50, 70, 90],
+    #           'FIFO':[480, 662, 833],
+    #           'SC':  [488, 666, 837],
+    #           'MRU': [478, 657, 824],
+    #           'NUR': [484, 671, 839]}
+    #   df = DataFrame(data)
+    #   self.app_tabela.set(df)
+    #   long_df = df.melt('FRAMES', var_name='algoritmos', value_name='acertos')
+    #   self.app_ax.clear()
+    #   pointplot(data=long_df,
+    #             x='FRAMES',
+    #             y='acertos',
+    #             hue='algoritmos',
+    #             ax=self.app_ax
+    #             ).set(title='Algoritmos de substituição de páginas',
+    #                   xlabel='Quantidade de Frames',
+    #                   ylabel='Quantidade de Acertos')
+    #   # ax.get_figure().savefig('output.png')
+    #   self.app_canvas.draw()
       
       
 
