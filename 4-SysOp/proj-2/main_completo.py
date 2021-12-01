@@ -142,6 +142,8 @@ def nur(limite:int, ref_list:'list[str]', delta_t:int=30) -> int:
       acerto += 1
       if ultimo_caracter == 'W':
         f.pag_list[pos].bit_M = 1
+      
+      if f.pag_list[pos].bit_M:
         f.pag_list[pos].classe = 3
       else:
         f.pag_list[pos].classe = 2
