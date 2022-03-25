@@ -9,19 +9,6 @@ LISTA_DE_TAMANHOS = np.array([1000, 2000, 3000,
                               4000, 5000, 8000,
                               11_000, 15_000], dtype=int)
 
-def bubble_sort(arr:np.ndarray) -> None:
-  i = 0
-  n = len(arr)
-  houve_troca = True
-  while i < n-1 and houve_troca:
-    i += 1
-    houve_troca = False
-    for j in range(n-1):
-      if arr[j] > arr[j+1]:
-        arr[j], arr[j+1] = arr[j+1], arr[j]
-        houve_troca = True
-
-
 def testa_algoritmo(func:function, tamanhos:'list[int]'=LISTA_DE_TAMANHOS) -> DataFrame:
   ''''''
   data = dict()
@@ -47,12 +34,12 @@ def testa_algoritmo(func:function, tamanhos:'list[int]'=LISTA_DE_TAMANHOS) -> Da
   data['tamanhos'] = LISTA_DE_TAMANHOS
   return DataFrame(data=data)
 
+
 def gerar_plot(df:DataFrame) -> DataFrame:
   ''''''
   long_df = df.melt(id_vars='tamanhos',
                     var_name='ordenação',
                     value_name='tempos')
-  
   set_style('darkgrid')
   pointplot(
     data=long_df,
@@ -69,6 +56,40 @@ def gerar_plot(df:DataFrame) -> DataFrame:
   ordem = long_df.sort_values(by='tempos', ascending=False)['ordenação'].values[0]
   print(f'O pior caso é quando a lista se encontra ordenada de forma {ordem}')
   return long_df
+
+
+def bubble_sort(arr:np.ndarray) -> None:
+  i = 0
+  n = len(arr)
+  houve_troca = True
+  while i < n-1 and houve_troca:
+    i += 1
+    houve_troca = False
+    for j in range(n-1):
+      if arr[j] > arr[j+1]:
+        arr[j], arr[j+1] = arr[j+1], arr[j]
+        houve_troca = True
+
+
+def selection(arr:'np.ndarray[float]') -> None:
+  """
+  Selection Sort
+  ---
+  Ordena o arr de forma crescente.
+  Dado o array de tamanho `n`, em cada iteração `i` define:
+  `arr[i]` como o menor elemento dentro do pedaço `arr[i:n]`;
+  o elemento que estava previamente em `arr[i]` troca de lugar
+  com o novo
+  """
+  n = len(arr)
+  i = 0
+  for i in range(n):
+    i_min = i
+    for j in range(i, n):
+      if arr[j]< arr[i]:
+        i_min = j
+    arr[i], arr[i_min] = arr[i_min], arr[i]
+
 
 if __name__ == '__main__':
   pass
