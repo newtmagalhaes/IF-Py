@@ -58,6 +58,9 @@ def gerar_plot(df:DataFrame) -> DataFrame:
   return long_df
 
 
+# ALGORITMOS DE ORDENAÇÃO
+
+
 def bubble_sort(arr:np.ndarray) -> None:
   i = 0
   n = len(arr)
@@ -89,6 +92,27 @@ def selection(arr:'np.ndarray[float]') -> None:
       if arr[j]< arr[i]:
         i_min = j
     arr[i], arr[i_min] = arr[i_min], arr[i]
+
+
+def insertion(arr:'np.ndarray[float]') -> None:
+  """
+  Insertion Sort
+  ---
+  Em cada iteração i, troca o elemento arr[i]
+  de posição com o anterior caso este seja maior,
+  esse processo acaba ao chegar no início do array
+  ou o elemento anterior não ser maior que o da iteração.
+  """
+  n = len(arr)
+  if n > 1:
+    for i in range(1, n):
+      atual = arr[i]
+      j = i - 1
+      while j >= 0 and arr[j] > atual:
+        arr[j+1] = arr[j]
+        j -= 1
+      arr[j+1] = atual
+
 
 
 if __name__ == '__main__':
