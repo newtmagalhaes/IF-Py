@@ -9,7 +9,7 @@ LISTA_DE_TAMANHOS = np.array([1000, 2000, 3000,
                               4000, 5000, 8000,
                               11_000, 15_000], dtype=int)
 
-def testa_algoritmo(func:function, tamanhos:'list[int]'=LISTA_DE_TAMANHOS) -> DataFrame:
+def testa_algoritmo(func:'function', tamanhos:'list[int]'=LISTA_DE_TAMANHOS) -> DataFrame:
   ''''''
   data = dict()
   for ordem in ['crescente', 'aleatoria', 'decrescente']:
@@ -112,6 +112,43 @@ def insertion(arr:'np.ndarray[float]') -> None:
         arr[j+1] = arr[j]
         j -= 1
       arr[j+1] = atual
+
+
+def quick(arr:'np.ndarray[float]', start:int=0, stop:int=None) -> None:
+  '''
+  Quick Sort
+  ---
+  Ordena o arr recursivamente de forma crescente.
+  A cada chamada, define `pivo` como sendo o ultimo elemento do
+  slice `arr[start, stop]` e agrupa no início dele os elementos que
+  são menores que ele, depois repete o processo recursivamente para
+  os slices menores e maiores do que o `pivo`.
+  
+  * OBS: definir limite de recursividade para algo pouco maior que
+  `len(arr) ** 2` para não estourar a pilha de recursividade no pior
+  caso:
+
+  ```python
+  from sys import setrecursionlimit
+  setrecursionlimit(int(1.1 * len(arr)**2))
+  ```
+  '''
+  stop = stop if stop is not None else len(arr)
+  i = start
+  if i < stop:
+    pivo = arr[stop-1]
+    # agrupa os elementos menores que o pivô no início no array
+    for j in range(start, stop):
+      if arr[j] < pivo:
+        arr[j], arr[i] = arr[i], arr[j]
+        i += 1
+  
+    # posiciona o pivô na posição i separando os grupos de menores e maiores que ele
+    arr[i], arr[stop-1] = arr[stop-1], arr[i]
+
+    # repete o processo recursivamente
+    quick(arr, start, i)
+    quick(arr, i+1, stop)
 
 
 
