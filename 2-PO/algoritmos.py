@@ -151,6 +151,27 @@ def quick(arr:'np.ndarray[float]', start:int=0, stop:int=None) -> None:
     quick(arr, i+1, stop)
 
 
+def count(arr:'np.ndarray[int]'):
+  """
+  O algoritmo leva em consideração que os elementos do array são
+  inteiros.
+  """
+  copia = arr.copy()
+  minimo, maximo = arr.min(), arr.max()
+  counts = np.zeros(maximo - minimo + 1, dtype=int)
+
+  for element in arr:
+    counts[element - minimo] += 1
+  
+  for i in range(1, len(counts)):
+    counts[i] += counts[i-1]
+  
+  for e in copia:
+    arr[counts[e - minimo] - 1] = e
+    counts[e - minimo] -= 1
+
+
 
 if __name__ == '__main__':
+  a = np.array([8, 5, 12, 55, 3, 7, 82, 44, 35, 25, 41, 29, 17])
   pass
