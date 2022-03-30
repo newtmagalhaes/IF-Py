@@ -10,7 +10,6 @@ LISTA_DE_TAMANHOS = np.array([1000, 2000, 3000,
                               11_000, 15_000], dtype=int)
 
 def testa_algoritmo(func:'function', tamanhos:'list[int]'=LISTA_DE_TAMANHOS) -> DataFrame:
-  ''''''
   data = dict()
   for ordem in ['crescente', 'aleatoria', 'decrescente']:
     tempos = list()
@@ -36,7 +35,6 @@ def testa_algoritmo(func:'function', tamanhos:'list[int]'=LISTA_DE_TAMANHOS) -> 
 
 
 def gerar_plot(df:DataFrame) -> DataFrame:
-  ''''''
   long_df = df.melt(id_vars='tamanhos',
                     var_name='ordenação',
                     value_name='tempos')
@@ -61,7 +59,7 @@ def gerar_plot(df:DataFrame) -> DataFrame:
 # ALGORITMOS DE ORDENAÇÃO
 
 
-def bubble_sort(arr:np.ndarray) -> None:
+def bubble(arr:np.ndarray) -> None:
   i = 0
   n = len(arr)
   houve_troca = True
@@ -89,7 +87,7 @@ def selection(arr:'np.ndarray[float]') -> None:
   for i in range(n):
     i_min = i
     for j in range(i, n):
-      if arr[j]< arr[i]:
+      if arr[j] < arr[i]:
         i_min = j
     arr[i], arr[i_min] = arr[i_min], arr[i]
 
@@ -115,7 +113,7 @@ def insertion(arr:'np.ndarray[float]') -> None:
 
 
 def quick(arr:'np.ndarray[float]', start:int=0, stop:int=None) -> None:
-  '''
+  """
   Quick Sort
   ---
   Ordena o arr recursivamente de forma crescente.
@@ -132,7 +130,7 @@ def quick(arr:'np.ndarray[float]', start:int=0, stop:int=None) -> None:
   from sys import setrecursionlimit
   setrecursionlimit(int(1.1 * len(arr)**2))
   ```
-  '''
+  """
   stop = stop if stop is not None else len(arr)
   i = start
   if i < stop:
@@ -169,6 +167,30 @@ def count(arr:'np.ndarray[int]'):
   for e in copia:
     arr[counts[e - minimo] - 1] = e
     counts[e - minimo] -= 1
+
+
+def bucket(arr:'np.ndarray[int]') -> None:
+  """Bucket Sort"""
+  LEN_BUCKET = 10
+
+  bucket_min, bucket_max = min(arr), max(arr)
+
+  n_buckets = (bucket_max - bucket_min) // LEN_BUCKET + 1
+  
+  buckets_list = [[] for _ in range(n_buckets)]
+
+  # Colocando elementos nos baldes
+  for e in arr:
+    pos = (e - bucket_min) // LEN_BUCKET
+    buckets_list[pos].append(e)
+  
+  # Ordenando baldes
+  pos = 0
+  for balde in buckets_list:
+    balde = sorted(balde)
+    for num in balde:
+      arr[pos] = num
+      pos += 1
 
 
 
