@@ -159,10 +159,7 @@ def count(arr:'np.ndarray[int]'):
   counts = np.zeros(maximo - minimo + 1, dtype=int)
 
   for element in arr:
-    counts[element - minimo] += 1
-  
-  for i in range(1, len(counts)):
-    counts[i] += counts[i-1]
+    counts[element - minimo:] += 1
   
   for e in copia:
     arr[counts[e - minimo] - 1] = e
@@ -204,9 +201,37 @@ def shell(arr:'np.ndarray[float]'):
     h //= 2
 
 
+def radix(arr:'np.ndarray[int]'):
+  """Radix Sort
+  
+  OBS: para números inteiros apenas.
+  """
+  # quantidade de caracteres diferentes (0 a 9)
+  S = 10
+  # Quantidade de dígitos do maior número
+  K = len(f'{max(arr)}')
+
+  for i in range(K):
+    copia = arr.copy()
+    counts = np.zeros(S, dtype=int)
+    pos = np.zeros(S, dtype=int)
+
+    for num in arr:
+      # se num tiver k dígitos (k<i), então na iteração i=k+1 -> d=0
+      d = (num % 10**(i+1)) // 10**i
+      counts[d] += 1
+    for j in range(1, S):
+      pos[j] += counts[j-1] + pos[j-1]
+    
+    for e in copia:
+      d = (e % 10**(i+1)) // 10**i
+      arr[pos[d]] = e
+      pos[d] += 1
+
+
 
 if __name__ == '__main__':
   a = np.array([8, 5, 12, 55, 3, 7, 82, 44, 35, 25, 41, 29, 17])
-  print(a)
-  shell(a)
-  print(a)
+  print(f'i=s:{a}')
+  radix(a)
+  print(f'i=f:{a}')
