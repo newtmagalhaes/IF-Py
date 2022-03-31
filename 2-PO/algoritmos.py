@@ -193,7 +193,20 @@ def bucket(arr:'np.ndarray[int]') -> None:
       pos += 1
 
 
+def shell(arr:'np.ndarray[float]'):
+  N = len(arr)
+  h = N // 2
+  while h > 0:
+    for i in range(h, N):
+      while i >= h and arr[i-h] > arr[i]:
+        arr[i], arr[i-h] = arr[i-h], arr[i]
+        i -= h
+    h //= 2
+
+
 
 if __name__ == '__main__':
   a = np.array([8, 5, 12, 55, 3, 7, 82, 44, 35, 25, 41, 29, 17])
-  pass
+  print(a)
+  shell(a)
+  print(a)
