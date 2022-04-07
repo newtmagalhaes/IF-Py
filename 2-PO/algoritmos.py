@@ -73,10 +73,10 @@ def bubble(arr:np.ndarray) -> None:
 
 
 def selection(arr:'np.ndarray[float]') -> None:
-  """
-  Selection Sort
-  ---
+  """Selection Sort
+  =================
   Ordena o arr de forma crescente.
+
   Dado o array de tamanho `n`, em cada iteração `i` define:
   `arr[i]` como o menor elemento dentro do pedaço `arr[i:n]`;
   o elemento que estava previamente em `arr[i]` troca de lugar
@@ -229,9 +229,43 @@ def radix(arr:'np.ndarray[int]'):
       pos[d] += 1
 
 
+def _heapify(heap:np.ndarray, start:int, max_pos:int):  
+  pai = start
+  while True:
+    filho = 2 * pai + 1
+    if filho > max_pos:
+      break
+
+    # Se ambos os filhos são posições válidas
+    if filho + 1 <= max_pos and heap[filho] < heap[filho + 1]:
+      filho += 1 # indica o maior filho
+    
+    if heap[pai] < heap[filho]:
+      heap[pai], heap[filho] = heap[filho], heap[pai]
+      pai = filho
+    else:
+      break
+
+
+def in_place_heap(arr:np.ndarray):
+  """In-place Heap sort
+  =====================
+  Utilizando uma heap máxima (o maior elemento fica na raiz).
+  """
+  N = len(arr)
+
+  # range((len(lst)-2)/2, -1, -1) # da metade de arr até o início
+  for start in range((N-2)//2).__reversed__():
+    _heapify(arr, start, N-1)
+ 
+  for end in range(N-1, 0, -1):
+    arr[end], arr[0] = arr[0], arr[end]
+    _heapify(arr, 0, end - 1)
+
+
 
 if __name__ == '__main__':
   a = np.array([8, 5, 12, 55, 3, 7, 82, 44, 35, 25, 41, 29, 17])
   print(f'i=s:{a}')
-  radix(a)
+  in_place_heap(a)
   print(f'i=f:{a}')
