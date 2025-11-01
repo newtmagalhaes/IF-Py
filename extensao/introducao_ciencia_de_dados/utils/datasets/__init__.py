@@ -1,0 +1,1 @@
+from .cervical_cancer import load_cervical_cancer
